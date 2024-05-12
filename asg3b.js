@@ -143,7 +143,7 @@ function drawTriangle(vertices){
 // Draws a 3D Triangle //
 
 function drawTriangle3D(vertices){
-    var n = 3;
+    var n = vertices.length/3;
 
     var vertexBuffer = gl.createBuffer();
     if (!vertexBuffer){
@@ -163,7 +163,7 @@ function drawTriangle3D(vertices){
 // Draws a UV of 3D Triangle //
 
 function drawTriangle3DUV(vertices,uv){
-    var n = 3;
+    var n = vertices.length/3;
 
     var vertexBuffer = gl.createBuffer();
     if (!vertexBuffer){
@@ -295,10 +295,78 @@ class Cube{
 
         drawTriangle3DUV([0.0,0.0,0.0, 0.0,0.0,1.0, 0.0,1.0,0.0],[0,0, 0,1, 1,0]);
         drawTriangle3DUV([0.0,1.0,1.0, 0.0,1.0,0.0, 0.0,0.0,1.0],[1,1, 1,0, 0,1]);
-
-
     }
+
+    renderfast(){
+        //var xy = this.position;
+        var rgba = this.color;
+        //var size = this.size;
+
+        gl.uniform1i(u_whichTexture,this.textureNum);
+
+        // Pass the color of a point to u_FragColor variable
+        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+
+        gl.uniformMatrix4fv(u_ModelMatrix,false,this.matrix.elements);
+
+        var allverts = [];
+        var alluv = []
+        // Front
+
+        allverts = allverts.concat(0,0,0, 1.0,1.0,0.0, 1.0,0.0,0.0);
+        alluv = alluv.concat(0,0, 1,1, 1,0);
+        allverts = allverts.concat(0.0,0.0,0.0 , 0.0,1.0,0.0, 1.0,1.0,0.0);
+        alluv = alluv.concat(0,0, 0,1, 1,1);
+
+        // Back
+
+        gl.uniform4f(u_FragColor,rgba[0]*.9,rgba[1]*.9,rgba[2]*.9,rgba[3]);
+
+        allverts = allverts.concat(0.0,1.0,1.0, 0.0,0.0,1.0, 1.0,1.0,1.0);
+        alluv = alluv.concat(0,1, 0,0, 1,1);
+        allverts = allverts.concat(1.0,0.0,1.0, 0.0,0.0,1.0, 1.0,1.0,1.0);
+        alluv = alluv.concat(1,0, 0,0, 1,1);
+
+        // Top
+
+        gl.uniform4f(u_FragColor,rgba[0]*.9,rgba[1]*.9,rgba[2]*.9,rgba[3]);
+
+        allverts = allverts.concat(0.0,1.0,0.0, 0.0,1.0,1.0, 1.0,1.0,1.0);
+        alluv = alluv.concat(0,0, 0,1, 1,1);
+        allverts = allverts.concat(0.0,1.0,0.0, 1.0,1.0,1.0, 1.0,1.0,0.0);
+        alluv = alluv.concat(0,0, 1,1, 1,0);
+
+        // Left
+
+        gl.uniform4f(u_FragColor,rgba[0]*.8,rgba[1]*.8,rgba[2]*.8,rgba[3]);
+
+        allverts = allverts.concat(1.0,1.0,1.0, 1.0,0.0,1.0, 1.0,1.0,0.0);
+        alluv = alluv.concat(1,1, 0,1, 1,0);
+        allverts = allverts.concat(1.0,0.0,0.0, 1.0,0.0,1.0, 1.0,1.0,0.0);
+        alluv = alluv.concat(0,0, 0,1, 1,0);
+
+        // Right
+
+        gl.uniform4f(u_FragColor,rgba[0]*.9,rgba[1]*.9,rgba[2]*.9,rgba[3]);
+
+        allverts = allverts.concat(0.0,0.0,0.0, 0.0,0.0,1.0, 0.0,1.0,0.0);
+        alluv = alluv.concat(0,0, 0,1, 1,0);
+        allverts = allverts.concat(0.0,1.0,1.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
+        alluv = alluv.concat(1,1, 1,0, 0,1);
+
+        if(g_bruh == 1){
+            console.log(alluv.length)
+            console.log(allverts.length)
+            console.log("here")
+            g_bruh+=1;
+        }
+
+        drawTriangle3DUV(allverts,alluv)
+    }
+
 }
+
+var g_bruh = 1
 
 // My second "primitive shape"
 class Pyramid{
@@ -526,7 +594,7 @@ function drawMap(){
                     var body = new Cube();
                     body.textureNum = 2
                     body.matrix.translate(x-20,-.75+z,y-20);
-                    body.render();
+                    body.renderfast();
                 }
             }
         }
@@ -836,16 +904,6 @@ function renderAllShapes(){
     sky.matrix.scale(50,50,50);
     sky.matrix.translate(-.5,-.5,-.5);
     sky.render();
-
-    var theCube = new Cube();
-    theCube.textureNum = 2
-    theCube.matrix.translate(3,0,0);
-    theCube.render();
-
-    var theCube2 = new Cube();
-    theCube2.color = [1,0,1,1];
-    theCube2.matrix.translate(3,0,-2);
-    theCube2.render();
 
     renderGnome();
 
