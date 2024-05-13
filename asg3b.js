@@ -161,7 +161,6 @@ function drawTriangle3D(vertices){
 }
 
 // Draws a UV of 3D Triangle //
-
 function drawTriangle3DUV(vertices,uv){
     var n = vertices.length/3;
 
@@ -195,8 +194,6 @@ function drawTriangle3DUV(vertices,uv){
 
     gl.drawArrays(gl.TRIANGLES,0,n);
 }
-
-
 
 /*
                     CIRCLES
@@ -281,6 +278,13 @@ class Cube{
 
         drawTriangle3DUV([0.0,1.0,0.0, 0.0,1.0,1.0, 1.0,1.0,1.0],[0,0, 0,1, 1,1]);
         drawTriangle3DUV([0.0,1.0,0.0, 1.0,1.0,1.0, 1.0,1.0,0.0],[0,0, 1,1, 1,0]);
+
+        // Bottom
+
+        gl.uniform4f(u_FragColor,rgba[0]*.9,rgba[1]*.9,rgba[2]*.9,rgba[3]);
+
+        drawTriangle3DUV([1.0,0.0,1.0, 0.0,0.0,0.0, 0.0,0.0,1.0],[1,0, 0,0, 0,0]);
+        drawTriangle3DUV([1.0,0.0,1.0, 0.0,0.0,0.0, 1.0,0.0,0.0],[1,0, 0,0, 1,0]);
 
         // Left
 
@@ -409,6 +413,8 @@ class Pyramid{
     }
 }
 
+// Camera Stuff //
+
 function cross(other1, other2) {
     // This function should create and return a new vector.
     let v3 = new Vector3(); // Modify this line to calculate cross product between other1 and other2.
@@ -477,6 +483,7 @@ class Camera{
         var f_prime = rotateMatLeft.multiplyVector3(f);
         this.at = this.at.set(this.eye);
         this.at = this.at.add(f_prime);
+        angle-=15
     }
     panRight(){
         let f = new Vector3();
@@ -487,6 +494,11 @@ class Camera{
         var f_prime = rotateMatLeft.multiplyVector3(f);
         this.at = this.at.set(this.eye);
         this.at = this.at.add(f_prime);
+        angle+=15
+    }
+    getPosition(){
+        sendTextToHTML(Math.floor(this.eye.elements[0]+20) + "," + Math.floor(this.eye.elements[2]+20) + " angle : " + Math.abs(Math.floor(angle)),"player");
+        return [Math.floor(this.eye.elements[0]+20),Math.floor(this.eye.elements[2]+20)]
     }
 }
 
@@ -513,6 +525,44 @@ function keydown(){
             case 101:
                 g_camera.panRight();
                 break;
+            case 114:
+                var playerAngle = Math.abs(Math.floor(angle));
+                var playerPos = g_camera.getPosition()
+                if(playerAngle < 45){
+                    if(g_map[playerPos[0]][playerPos[1]-1] > 0){
+                        break;
+                    }
+                    g_map[playerPos[0]][playerPos[1]-1] = 1
+                }else if(playerAngle > 135 && playerAngle < 270){
+                    if(g_map[playerPos[0]][playerPos[1]-1] > 0){
+                        break;
+                    }
+                    g_map[playerPos[0]][playerPos[1]+1] = 1
+                }else if(playerAngle > 45 && Math.sign(angle) == -1){
+                    if(g_map[playerPos[0]][playerPos[1]-1] > 0){
+                        break;
+                    }
+                    g_map[playerPos[0]-1][playerPos[1]] = 1
+                }else if(playerAngle < 225 && Math.sign(angle) == 1){
+                    if(g_map[playerPos[0]][playerPos[1]-1] > 0){
+                        break;
+                    }
+                    g_map[playerPos[0]+1][playerPos[1]] = 1
+                }
+                break;
+            case 102:
+                var playerAngle = Math.abs(Math.floor(angle));
+                var playerPos = g_camera.getPosition()
+                if(playerAngle < 45){
+                    g_map[playerPos[0]][playerPos[1]-1] = 0
+                }else if(playerAngle > 135 && playerAngle < 270){
+                    g_map[playerPos[0]][playerPos[1]+1] = 0
+                }else if(playerAngle > 45 && Math.sign(angle) == -1){
+                    g_map[playerPos[0]-1][playerPos[1]] = 0
+                }else if(playerAngle < 225 && Math.sign(angle) == 1){
+                    g_map[playerPos[0]+1][playerPos[1]] = 0
+                }
+                break;
             default:
                 console.log(event.keyCode);
                 break;
@@ -523,6 +573,7 @@ function keydown(){
 let mousePos = [0,0];
 let deltaPos = [0,0];
 let prevPos = [0,0];
+let angle = 0
 
 function mouseLook(event){
     document.addEventListener('mousemove',function(event){
@@ -530,6 +581,9 @@ function mouseLook(event){
         mousePos[1] = event.y;
 
         deltaPos[0] = mousePos[0] - prevPos[0];
+        
+        angle += deltaPos[0];
+        angle = angle % 360
 
         let f = new Vector3();
         f = f.set(g_camera.at);
@@ -549,48 +603,60 @@ function mouseLook(event){
 
 }
 
+/*
+function placeBlock(){
+    var playerPos = g_camera.getPosition()
+    document.addEventListener("mousedown", function(event){
+        if(event.button == 2){
+            g_map[playerPos[0]][playerPos[1]] = 1;
+        }else if(event.button == 0){
+            g_map[playerPos[0]][playerPos[1]] = 0;
+        }
+    });
+}*/
+
 // Map //
 
 let g_map = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [10,10,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,10,10],
+    [10,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,10],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,2,0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,2,2,0,0,2,2,2,0,0,2,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,2,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,2,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,2,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,2,2,2,2,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,0,0,0,2,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,0,0,0,0,0,2,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,2,0,2,2,0,0,2,2,2,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,2,2,0,2,0,0,0,0,2,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,2,0,0,0,0,2,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,2,2,2,2,2,2,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4],
+    [4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+    [10,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,10],
+    [10,10,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,10,10],
 ]
 
 function drawMap(){
     for(x=0;x<32;x++){
         for(y=0;y<32;y++){
-            if(g_map[x][y]==1){
-                for(z=0;z<4;z++){
+            if(g_map[x][y]>0){
+                for(z=0;z<g_map[x][y];z++){
                     var body = new Cube();
                     body.textureNum = 2
                     body.matrix.translate(x-20,-.75+z,y-20);
@@ -600,8 +666,6 @@ function drawMap(){
         }
     }
 }
-
-
 
 // UV and Texturing //
 
@@ -772,7 +836,7 @@ function convertCoordinatesEventToGL(ev){
 function renderGnome(){
     var body = new Cube();
     body.color = [1.0,0.0,0.0,1.0];
-    body.matrix.translate(-.25,-.3,0.0);
+    body.matrix.translate(-.25,-.3,1.5);
     body.matrix.rotate(0,1,0,0)
     body.matrix.rotate(-g_bodyAngle,1,0,0)
     var bodyCoords = new Matrix4(body.matrix);
@@ -815,13 +879,13 @@ function renderGnome(){
 
     var leg1 = new Cube();
     leg1.color = [0.0,0.0,.5,1.0];
-    leg1.matrix.translate(.05,-.9,.05)
+    leg1.matrix.translate(.05,-.9,1.55)
     leg1.matrix.scale(.2,.6,.2);
     leg1.render();
 
     var leg2 = new Cube();
     leg2.color = [0.0,0.0,.5,1.0];
-    leg2.matrix.translate(-.25,-.9,.05)
+    leg2.matrix.translate(-.25,-.9,1.55)
     leg2.matrix.scale(.2,.6,.2);
     leg2.render();
 
@@ -884,7 +948,8 @@ function renderAllShapes(){
 
     var globalRotMat = new Matrix4().rotate(g_globalAngle,1,1,1);
     gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,globalRotMat.elements);
-    
+
+    //placeBlock();
 
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -907,6 +972,103 @@ function renderAllShapes(){
 
     renderGnome();
 
+    var body = new Cube();
+    body.color = [0.0,0.0,1.0,1.0];
+    body.matrix.translate(-4.25,-.3,8.5);
+    body.matrix.rotate(0,1,0,0)
+    body.matrix.rotate(-g_bodyAngle,1,0,0)
+    var bodyCoords = new Matrix4(body.matrix);
+    body.matrix.scale(.5,.6,.3);
+    body.render(); 
+
+    var arm2 = new Cube();
+    arm2.color = [0.0,0.0,0.5,1.0];
+    arm2.matrix = new Matrix4(bodyCoords);
+    arm2.matrix.translate(.6,0,.05)
+    arm2.matrix.rotate(180,0,0,1)
+    arm2.matrix.rotate(180,0,1,0)
+    arm2.matrix.translate(-.1,-.6,-.2)
+    arm2.matrix.rotate(-g_armAngle,0,0,1)
+    var arm2Coords = new Matrix4(arm2.matrix)
+    arm2.matrix.scale(.2,.6,.2);
+    arm2.render();
+
+    var hand1 = new Cube();
+    hand1.color = [1.0,1.0,0.0,1.0];
+    hand1.matrix = new Matrix4(arm2Coords);
+    hand1.matrix.scale(.15,.15,.05)
+    hand1.matrix.translate(0,4,1.5);
+    hand1.matrix.rotate(-g_handAngle,0,0,1)
+    hand1.render();
+
+    var hand2 = new Cube();
+    hand2.color = [1.0,1.0,0.0,1.0];
+    hand2.matrix = new Matrix4(bodyCoords);
+    hand2.matrix.scale(.15,.15,.05)
+    hand2.matrix.translate(-1,-1,2);
+    hand2.render();
+
+    var arm3 = new Cube();
+    arm2.color = [0.0,0.0,0.5,1.0];
+    arm2.matrix = new Matrix4(bodyCoords);
+    arm2.matrix.translate(-.2,0,.05)
+    arm2.matrix.scale(.2,.6,.2);
+    arm2.render();
+
+    var leg1 = new Cube();
+    leg1.color = [0.0,0.0,.5,1.0];
+    leg1.matrix.translate(-3.95,-.9,8.55)
+    leg1.matrix.scale(.2,.6,.2);
+    leg1.render();
+
+    var leg2 = new Cube();
+    leg2.color = [0.0,0.0,.5,1.0];
+    leg2.matrix.translate(-4.25,-.9,8.55)
+    leg2.matrix.scale(.2,.6,.2);
+    leg2.render();
+
+
+
+    // Head //
+
+    var head = new Cube();
+    head.color = [1.0,1.0,0.0,1.0];
+    head.matrix = bodyCoords;
+    head.matrix.translate(.1,.6,0);
+    head.matrix.rotate(-g_headAngle,1,0,0);
+    var headCoords = new Matrix4(head.matrix);
+    head.matrix.scale(.3,.3,.3);
+    head.render(); 
+
+    var hat = new Pyramid();
+    hat.color = [0,0,1,1];
+    hat.matrix = new Matrix4(headCoords);
+    hat.matrix.translate(0,.3,0)
+    hat.matrix.scale(.3,.3,.3);
+    hat.matrix.translate(0,g_hatTranslate,0)
+    hat.render();
+
+    var eye1 = new Cube();
+    eye1.color = [.3,.3,.3,1];
+    eye1.matrix = new Matrix4(headCoords);
+    eye1.matrix.translate(0,.15,-.05)
+    eye1.matrix.scale(.12,.1,.05);
+    eye1.render();
+
+    var eye2 = new Cube();
+    eye2.color = [.3,.3,.3,1];
+    eye2.matrix = new Matrix4(headCoords);
+    eye2.matrix.translate(.18,.15,-.05)
+    eye2.matrix.scale(.12,.1,.05);
+    eye2.render();
+
+    var eye3 = new Cube();
+    eye3.color = [.3,.3,.3,1];
+    eye3.matrix = new Matrix4(headCoords);
+    eye3.matrix.translate(0.1,.2,-.05)
+    eye3.matrix.scale(.12,.05,.05);
+    eye3.render();
+
     drawMap();
     
 
@@ -914,7 +1076,7 @@ function renderAllShapes(){
 
 
     var duration = performance.now() - startTime;
-    sendTextToHTML("ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration), "numdot");
+    sendTextToHTML("ms: " + Math.floor(duration) + " fps: " + Math.floor(10000/duration) + " position : " + g_camera.getPosition(), "numdot");
 
 }
 
@@ -938,27 +1100,13 @@ let g_bodyAngle = 0;
 let g_headAngle = 0;
 let g_armAngle = 0;
 let g_handAngle = 0;
-let animation = false;
+let animation = true;
 let g_hatTranslate = 0
-
-function addActionsForHtmlUI(){
-
-    document.getElementById("angleSlide").addEventListener('mousemove',function() {g_globalAngle = this.value; renderAllShapes(); });
-    document.getElementById("body").addEventListener('mousemove',function() {g_bodyAngle = this.value; renderAllShapes(); });
-    document.getElementById("arm").addEventListener('mousemove',function() {g_armAngle = this.value; renderAllShapes(); });
-    document.getElementById("hand").addEventListener('mousemove',function() {g_handAngle = this.value; renderAllShapes(); });
-    document.getElementById("head").addEventListener('mousemove',function() {g_headAngle = this.value; renderAllShapes(); });
-    
-
-    document.getElementById("animation").onclick = function() {animation = !animation;};
-
-}
 
 
 function main() {
     setupWebGL();
     connectVariablesToGLSL();
-    addActionsForHtmlUI();
     initTextures(gl,0);
     keydown();
     mouseLook();
