@@ -526,6 +526,7 @@ function keydown(){
                 g_camera.panRight();
                 break;
             case 114:
+                /*
                 var playerAngle = Math.abs(Math.floor(angle));
                 var playerPos = g_camera.getPosition()
                 if(playerAngle < 45){
@@ -548,9 +549,12 @@ function keydown(){
                         break;
                     }
                     g_map[playerPos[0]+1][playerPos[1]] = 1
-                }
+                }*/
+                var playerPos = g_camera.getPosition()
+                g_map[playerPos[0]][playerPos[1]] = 1
                 break;
             case 102:
+                /*
                 var playerAngle = Math.abs(Math.floor(angle));
                 var playerPos = g_camera.getPosition()
                 if(playerAngle < 45){
@@ -561,7 +565,10 @@ function keydown(){
                     g_map[playerPos[0]-1][playerPos[1]] = 0
                 }else if(playerAngle < 225 && Math.sign(angle) == 1){
                     g_map[playerPos[0]+1][playerPos[1]] = 0
-                }
+                }*/
+                var playerPos = g_camera.getPosition()
+                g_map[playerPos[0]][playerPos[1]] = 0
+                console.log("here")
                 break;
             default:
                 console.log(event.keyCode);
